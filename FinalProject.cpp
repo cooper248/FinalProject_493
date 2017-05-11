@@ -150,7 +150,6 @@ void initPolicies(vector<policy>* population, vector<student>* allStudents){
             policyChange.at(pullLocation2) = hold[0];
         }
         
-        // LR 6 - Doesnt visit same student twice                                                                      // LR 6
         for(int i =0; i<policyChange.size(); i++)
         {
             for(int j = 0; j<policyChange.size(); j++)
@@ -163,14 +162,10 @@ void initPolicies(vector<policy>* population, vector<student>* allStudents){
         
         policy A;
         A.initPolicy(policyChange);
-        
-        // MR 3 all policies have a fitness                                                                         // MR 3
         assert(A.fitness > 10);
         population->push_back(A);
     }
     
-    
-    // MR 1 - population is filled with policies and the size is greater than 1 (equals the desired size)              // MR 1
     assert(population->size() == populationSize);
 };
 
@@ -204,8 +199,7 @@ vector<student> policy::mutatePolicy(vector<student> mutatePolicy){
         mutate.at(pullLocation2) = hold[0];
         hold.clear();
     }
-    
-    //Test that slight mutation occured                                                                           // LR 4
+
     int repeat=0;
     for(int i= 1; i<numStudents; i++){
         if(mutate.at(i).studentLocX == mutatePolicy.at(i).studentLocX){
@@ -235,8 +229,6 @@ vector<policy> replicatePop(vector<policy>* population){
         B.initPolicy(mutate);
         mutatePop.push_back(B);
     }
-    
-    // MR 5 - Can return to carrying capastudent (Mutated population doubles back to 200)                         // MR 5
     assert(mutatePop.size() == populationSize * 2);
     return mutatePop;
 };
@@ -278,12 +270,11 @@ vector<policy> downSelect(vector<policy>* mutatedPopulation){
         }
     }
     
-    // MR 4 - Downselect cuts parent population in half - Downselection                                           // MR 4
     assert(population.size() == mutatedPopulation->size()/2);
     return population;
 };
 
-void printInfo(vector<policy> population, vector<double>* averages, vector<double>* minimum, vector<double>* maximum){
+void printInfo(vector<policy> population, vector<double>* averages, vector<double>* minimum, vector<double>* maximum, int check){
     
     double average = 0.0;
     double min = 100000;
@@ -303,10 +294,14 @@ void printInfo(vector<policy> population, vector<double>* averages, vector<doubl
         }
     }
     average = average/populationSize;
-    cout<<"AVERAGE: "<<average<<" MIN: "<<min<<" MAX: "<<max<<" Min repeat: "<<minRepeat<<endl;
     averages->push_back(average);
     minimum->push_back(min);
     maximum->push_back(max);
+    
+    if(check == 1)
+    {
+    cout<<"Average:"<<average <<"\t"<<"Minimum:"<<min <<"\t"<<"Maxium:"<<max <<"\n";
+    }
 };
 
 void writeToFile(vector<double>* averages, vector<double>* minimum, vector<double>* maximum){
@@ -339,11 +334,12 @@ int main() {
     // Initialize Students
     initStudents(&allStudents);
 
+    for(int j=0; j<30; j++){
         // Initialize policies
         initPolicies(&population, &allStudents);
         
         cout<<"Original Fitnesses: "<<endl;
-        printInfo(population, &averages, &minimum, &maximum);
+        printInfo(population, &averages, &minimum, &maximum,1);
         
         // Start EA (for)
         
@@ -355,19 +351,28 @@ int main() {
             // Downselect -> Binary tournament
             population.clear();
             population = downSelect(&mutatedPopulation);
-            //cout<<endl;
-            //printInfo(population, &averages, &minimum, &maximum);
+            printInfo(population, &averages, &minimum, &maximum,0);
         }
-        cout<<endl<<" - - - - - - - - - - - - - - - - - - - - - - - - "<<endl<<"Final Fitnesses: "<<endl;
-        printInfo(population, &averages, &minimum, &maximum);
-        //writeToFile( &averages, &minimum, &maximum );
         
+        cout<<endl<<" - - - - - - - - - - - - - - - - - - - - - - - - "<<endl<<"Final Fitnesses: "<<endl;
+        printInfo(population, &averages, &minimum, &maximum,1);
+        
+        allAverages.push_back(averages);
+        allMaximum.push_back(maximum);
+        allMinimum.push_back(minimum);
+        //initPolicies(&population, &allStudents);
+        
+        averages.clear();
+        minimum.clear();
+        maximum.clear();
+        
+    }
+
 
     double tutorX= 7.5;
     double tutorY = 10;
     int best = 100000;
     int bestLoc = 0;
-    cout<< " POP SIZE: "<<population.size()<<endl;
     for(int i =0;i<population.size();i++)
     {
         if(population.at(i).fitness<best)
@@ -404,7 +409,6 @@ int main() {
     bestX.push_back(tutorX);
     bestY.push_back(tutorY);
     
-    cout<<"here"<<endl;
     ofstream bestPath;
     bestPath.open("BestRoute");
     for(int j = 0; j<bestX.size(); j++)
@@ -413,9 +417,43 @@ int main() {
     }
     bestPath.close();
     
+    ofstream aver;
+    aver.open("Averages");
+    for(int i =0; i<numGenerations; i++)
+    {
+        for(int j = 0; j<30; j++)
+        {
+            aver << allAverages.at(j)[i] << "\t";
+        }
+        aver << "\n";
+        
+    }
+    aver.close();
     
-
+    ofstream mini;
+    mini.open("Minimums");
+    for(int i =0; i<numGenerations; i++)
+    {
+        for(int j = 0; j<30; j++)
+        {
+            mini << allMinimum.at(j)[i] << "\t";
+        }
+        mini << "\n";
+    }
+    mini.close();
     
+    ofstream maxi;
+    maxi.open("Maximum");
+    for(int i =0; i<numGenerations; i++)
+    {
+        for(int j = 0; j<30; j++)
+        {
+            maxi << allMaximum.at(j)[i] << "\t";
+        }
+        maxi << "\n";
+        
+    }
+    maxi.close();
 }
 
 
